@@ -11,8 +11,12 @@
         </div>
     </div>
     <button type="button" class="btn btn-purple rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente" style="background-color: #6f42c1; color: white;">
-        + Nuevo Cliente
+        + Crear Nuevo Cliente
     </button>
+    @*   <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div> *@
 </div>
 
 <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -62,7 +66,7 @@
                     <tr>
                         <th class="ps-4 py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Cliente</th>
                         <th class="py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Contacto</th>
-                        <th class="py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Tipo</th>
+                        <th class="py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Email</th>
                         <th class="py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Saldo Cta. Cte.</th>
                         <th class="pe-4 py-3 text-end small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Acciones</th>
                     </tr>
@@ -85,18 +89,11 @@
                             <td class="py-3">
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold text-dark">@(item.Localidad ?? "-")</span>
-                                    <span class="small text-success"><i class="bi bi-whatsapp me-1"></i>@(item.Telefono ?? "-")</span>
+                                    <span class="small text-success"><i class="bi bi-whatsapp me-1"></i>@(item.Celular ?? item.Telefono ?? "-")</span>
                                 </div>
                             </td>
                             <td class="py-3">
-                                @if (item.TipoCliente == "Mayorista")
-                                {
-                                    <span class="badge rounded-pill px-3" style="color: #6f42c1; background-color: #e2d9f3; border: 1px solid #d6bcfa;">Mayorista</span>
-                                }
-                                else
-                                {
-                                    <span class="badge rounded-pill px-3" style="color: #6f42c1; background-color: #e2d9f3; border: 1px solid #d6bcfa;">Revendedor</span>
-                                }
+                                <span class="small">@(item.Email ?? "-")</span>
                             </td>
                             <td class="py-3">
                                 @if (item.SaldoCuentaCorriente < 0)
@@ -117,10 +114,6 @@
                                 }
                             </td>
                             <td class="pe-4 py-3 text-end">
-                                <button class="btn btn-light btn-sm rounded-circle shadow-sm me-1" title="Ver Cuenta Corriente">
-                                    <i class="bi bi-wallet2 text-secondary"></i>
-                                </button>
-
                                 <button class="btn btn-light btn-sm rounded-circle shadow-sm"
                                         title="Editar Cliente"
                                         data-bs-toggle="modal"
@@ -128,10 +121,18 @@
                                         data-cliente-id="@item.Id"
                                         data-cliente-nombre="@item.NombreRazonSocial"
                                         data-cliente-cuit="@item.Cuit"
+                                        data-cliente-domicilio="@item.Domicilio"
+                                        data-cliente-email="@item.Email"
                                         data-cliente-telefono="@item.Telefono"
+                                        data-cliente-celular="@item.Celular"
+                                        data-cliente-fax="@item.Fax"
                                         data-cliente-localidad="@item.Localidad"
                                         data-cliente-tipo="@item.TipoCliente">
                                     <i class="bi bi-pencil-fill" style="color: #6f42c1;"></i>
+                                </button>
+
+                                <button type="button" class="btn btn-light btn-sm rounded-circle shadow-sm" title="Eliminar Cliente" data-bs-toggle="modal" data-bs-target="#modalConfirmarEliminar" data-cliente-id="@item.Id" data-cliente-nombre="@item.NombreRazonSocial">
+                                    <i class="bi bi-trash3-fill text-danger"></i>
                                 </button>
                             </td>
                         </tr>
@@ -142,13 +143,16 @@
     </div>
 </div>
 
+<!-- Modal Nuevo Cliente -->
 <div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-0 pb-0 ps-4 pt-4 rounded-top-4" style="background-color: #6f42c1; color: white;">
-                <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Nuevo Cliente</h5>
+           
+            <div class="modal-header text-white" style="background-color: #6f42c1; color: white;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Cliente</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+
             <form action="@Url.Action("GuardarCliente", "Clientes")" method="post">
                 <div class="modal-body p-4 bg-white">
                     <div class="mb-3">
@@ -161,22 +165,31 @@
                             <input type="text" name="Cuit" class="form-control bg-light border-0 rounded-3 py-2" required>
                         </div>
                         <div class="col-6">
+                            <label class="form-label small fw-bold text-secondary">EMAIL</label>
+                            <input type="email" name="Email" class="form-control bg-light border-0 rounded-3 py-2">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">DOMICILIO</label>
+                        <input type="text" name="Domicilio" class="form-control bg-light border-0 rounded-3 py-2">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-4">
                             <label class="form-label small fw-bold text-secondary">TELÉFONO</label>
                             <input type="text" name="Telefono" class="form-control bg-light border-0 rounded-3 py-2">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-bold text-secondary">CELULAR</label>
+                            <input type="text" name="Celular" class="form-control bg-light border-0 rounded-3 py-2">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-bold text-secondary">FAX</label>
+                            <input type="text" name="Fax" class="form-control bg-light border-0 rounded-3 py-2">
                         </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary">LOCALIDAD</label>
                         <input type="text" name="Localidad" class="form-control bg-light border-0 rounded-3 py-2">
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label small fw-bold text-secondary">TIPO DE CLIENTE</label>
-                        <div class="d-flex gap-2">
-                            <input type="radio" class="btn-check" name="TipoCliente" id="tn1" value="Mayorista" checked>
-                            <label class="btn rounded-pill flex-fill fw-bold small py-2" for="tn1" style="border: 2px solid #6f42c1; color: #6f42c1;">Mayorista</label>
-                            <input type="radio" class="btn-check" name="TipoCliente" id="tn2" value="Revendedor">
-                            <label class="btn rounded-pill flex-fill fw-bold small py-2" for="tn2" style="border: 2px solid #6f42c1; color: #6f42c1;">Revendedor</label>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pe-4 pb-4 bg-white rounded-bottom-4 d-flex justify-content-end gap-2">
@@ -190,7 +203,7 @@
 
 <!-- Modal Editar Cliente -->
 <div class="modal fade" id="modalEditarCliente" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-0 pb-0 ps-4 pt-4 rounded-top-4" style="background-color: #6f42c1; color: white;">
                 <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Editar Cliente</h5>
@@ -209,22 +222,31 @@
                             <input type="text" name="Cuit" id="editClienteCuit" class="form-control bg-light border-0 rounded-3 py-2" required>
                         </div>
                         <div class="col-6">
+                            <label class="form-label small fw-bold text-secondary">EMAIL</label>
+                            <input type="email" name="Email" id="editClienteEmail" class="form-control bg-light border-0 rounded-3 py-2">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">DOMICILIO</label>
+                        <input type="text" name="Domicilio" id="editClienteDomicilio" class="form-control bg-light border-0 rounded-3 py-2">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-4">
                             <label class="form-label small fw-bold text-secondary">TELÉFONO</label>
                             <input type="text" name="Telefono" id="editClienteTelefono" class="form-control bg-light border-0 rounded-3 py-2">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-bold text-secondary">CELULAR</label>
+                            <input type="text" name="Celular" id="editClienteCelular" class="form-control bg-light border-0 rounded-3 py-2">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-bold text-secondary">FAX</label>
+                            <input type="text" name="Fax" id="editClienteFax" class="form-control bg-light border-0 rounded-3 py-2">
                         </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary">LOCALIDAD</label>
                         <input type="text" name="Localidad" id="editClienteLocalidad" class="form-control bg-light border-0 rounded-3 py-2">
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label small fw-bold text-secondary">TIPO DE CLIENTE</label>
-                        <div class="d-flex gap-2">
-                            <input type="radio" class="btn-check" name="TipoCliente" id="editTipo1" value="Mayorista">
-                            <label class="btn rounded-pill flex-fill fw-bold small py-2" for="editTipo1" style="border: 2px solid #6f42c1; color: #6f42c1;">Mayorista</label>
-                            <input type="radio" class="btn-check" name="TipoCliente" id="editTipo2" value="Revendedor">
-                            <label class="btn rounded-pill flex-fill fw-bold small py-2" for="editTipo2" style="border: 2px solid #6f42c1; color: #6f42c1;">Revendedor</label>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pe-4 pb-4 bg-white rounded-bottom-4 d-flex justify-content-end gap-2">
@@ -236,43 +258,96 @@
     </div>
 </div>
 
+<!-- Modal Confirmar Eliminar Cliente -->
+<div class="modal fade" id="modalConfirmarEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-5 text-center">
+                <div class="mb-4">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px; background-color: #fee2e2;">
+                        <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 48px;"></i>
+                    </div>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">¿Estás seguro?</h5>
+                <p class="text-muted mb-4">Esta acción borrará al cliente permanentemente y no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer border-0 bg-light p-4 rounded-bottom-4 d-flex justify-content-center gap-2">
+                <button type="button" class="btn btn-secondary rounded-pill px-5 fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger rounded-pill px-5 fw-bold" id="btnConfirmarEliminar">Sí, Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Cargar datos al abrir el modal de edición
     document.addEventListener('DOMContentLoaded', function() {
         var modalEditarCliente = document.getElementById('modalEditarCliente');
 
         modalEditarCliente.addEventListener('show.bs.modal', function (event) {
             var button = event.relatedTarget;
 
-            // Extraer información de los atributos data-*
             var clienteId = button.getAttribute('data-cliente-id');
             var clienteNombre = button.getAttribute('data-cliente-nombre');
             var clienteCuit = button.getAttribute('data-cliente-cuit');
+            var clienteDomicilio = button.getAttribute('data-cliente-domicilio');
+            var clienteEmail = button.getAttribute('data-cliente-email');
             var clienteTelefono = button.getAttribute('data-cliente-telefono');
+            var clienteCelular = button.getAttribute('data-cliente-celular');
+            var clienteFax = button.getAttribute('data-cliente-fax');
             var clienteLocalidad = button.getAttribute('data-cliente-localidad');
             var clienteTipo = button.getAttribute('data-cliente-tipo');
 
-            // Actualizar los campos del formulario
             document.getElementById('editClienteId').value = clienteId;
             document.getElementById('editClienteNombre').value = clienteNombre;
             document.getElementById('editClienteCuit').value = clienteCuit;
+            document.getElementById('editClienteDomicilio').value = clienteDomicilio || '';
+            document.getElementById('editClienteEmail').value = clienteEmail || '';
             document.getElementById('editClienteTelefono').value = clienteTelefono || '';
+            document.getElementById('editClienteCelular').value = clienteCelular || '';
+            document.getElementById('editClienteFax').value = clienteFax || '';
             document.getElementById('editClienteLocalidad').value = clienteLocalidad || '';
 
-            // Seleccionar el tipo de cliente correcto
             if (clienteTipo === 'Mayorista') {
                 document.getElementById('editTipo1').checked = true;
             } else {
                 document.getElementById('editTipo2').checked = true;
             }
         });
+
+        var modalConfirmarEliminar = document.getElementById('modalConfirmarEliminar');
+        var clienteIdToDelete = null;
+
+        modalConfirmarEliminar.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            clienteIdToDelete = button.getAttribute('data-cliente-id');
+        });
+
+        document.getElementById('btnConfirmarEliminar').addEventListener('click', function() {
+            if (clienteIdToDelete) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("EliminarCliente", "Clientes")';
+
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'id';
+                input.value = clienteIdToDelete;
+
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     });
 </script>
 
 <style>
-    /* Estilos para botones radio cuando están seleccionados */
     .btn-check:checked + label {
         background-color: #6f42c1 !important;
         color: white !important;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.05);
     }
 </style>

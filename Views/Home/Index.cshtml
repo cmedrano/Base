@@ -57,7 +57,7 @@
                 <div class="mt-auto d-flex gap-2">
                     <a href="@Url.Action("Index", "Clientes")" class="btn btn-secondary flex-grow-1">Ver Todos</a>
                     <button type="button" class="btn text-white flex-grow-1" style="background-color: #6610f2;" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">
-                        <i class="bi bi-person-plus-fill"></i> Nuevo
+                        <i class="bi bi-person-plus-fill"></i> Nuevo Cliente
                     </button>
                 </div>
             </div>
@@ -73,9 +73,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Usuario
-                    </h5>
+                    <h5 class="modal-title fw-bold"> <i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Usuario</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -93,12 +91,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary">CONTRASEÑA</label>
-                            <input type="password" name="Password" class="form-control bg-light border-0" required autocomplete="new-password">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary">ASIGNAR ROL</label>
+                            <label class="form-label small fw-bold text-secondary">ROL</label>
                             <select name="RolId" class="form-select bg-light border-0 py-2" required>
                                 <option value="" selected disabled>Seleccione un rol...</option>
                                 @foreach (var rol in ViewBag.Roles)
@@ -106,6 +99,11 @@
                                     <option value="@rol.Id">@rol.Nombre</option>
                                 }
                             </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">CONTRASEÑA</label>
+                            <input type="password" name="Password" class="form-control bg-light border-0" required autocomplete="new-password">
                         </div>
 
                     </div>
@@ -121,12 +119,17 @@
 
 @* Modal Nuevo Cliente - Visible para todos *@
 <div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-0 pb-0 ps-4 pt-4 rounded-top-4" style="background-color: #6f42c1; color: white;">
+            @* <div class="modal-header border-0 pb-0 ps-4 pt-4 rounded-top-4" style="background-color: #6f42c1; color: white;">
                 <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Nuevo Cliente</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div> *@
+            <div class="modal-header text-white" style="background-color: #6f42c1; color: white;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Cliente</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+
             <form action="@Url.Action("GuardarCliente", "Clientes")" method="post">
                 <div class="modal-body p-4 bg-white">
                     <div class="mb-3">
@@ -139,22 +142,31 @@
                             <input type="text" name="Cuit" class="form-control bg-light border-0 rounded-3 py-2" required>
                         </div>
                         <div class="col-6">
+                            <label class="form-label small fw-bold text-secondary">EMAIL</label>
+                            <input type="email" name="Email" class="form-control bg-light border-0 rounded-3 py-2">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">DOMICILIO</label>
+                        <input type="text" name="Domicilio" class="form-control bg-light border-0 rounded-3 py-2">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-4">
                             <label class="form-label small fw-bold text-secondary">TELÉFONO</label>
                             <input type="text" name="Telefono" class="form-control bg-light border-0 rounded-3 py-2">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-bold text-secondary">CELULAR</label>
+                            <input type="text" name="Celular" class="form-control bg-light border-0 rounded-3 py-2">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-bold text-secondary">FAX</label>
+                            <input type="text" name="Fax" class="form-control bg-light border-0 rounded-3 py-2">
                         </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary">LOCALIDAD</label>
                         <input type="text" name="Localidad" class="form-control bg-light border-0 rounded-3 py-2">
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label small fw-bold text-secondary">TIPO DE CLIENTE</label>
-                        <div class="d-flex gap-2">
-                            <input type="radio" class="btn-check" name="TipoCliente" id="tn1" value="Mayorista" checked>
-                            <label class="btn rounded-pill flex-fill fw-bold small py-2" for="tn1" style="border: 2px solid #6f42c1; color: #6f42c1;">Mayorista</label>
-                            <input type="radio" class="btn-check" name="TipoCliente" id="tn2" value="Revendedor">
-                            <label class="btn rounded-pill flex-fill fw-bold small py-2" for="tn2" style="border: 2px solid #6f42c1; color: #6f42c1;">Revendedor</label>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pe-4 pb-4 bg-white rounded-bottom-4 d-flex justify-content-end gap-2">
@@ -189,8 +201,13 @@
         border-color: #6f42c1;
     }
 
-    .btn-outline-purple:hover, .btn-check:checked + .btn-outline-purple {
-        background-color: #6f42c1;
-        color: white;
+        .btn-outline-purple:hover, .btn-check:checked + .btn-outline-purple {
+            background-color: #6f42c1;
+            color: white;
+        }
+
+    .btn-check:checked + label {
+        background-color: #6f42c1 !important;
+        color: white !important;
     }
 </style>

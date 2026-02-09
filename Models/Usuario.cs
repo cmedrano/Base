@@ -21,5 +21,8 @@ namespace AvicolaApp.Models
 
         [ForeignKey("RolId")]
         public virtual Rol Rol { get; set; } = null!;
+
+        // Borrado lógico: 1 = activo, 0 = inactivo (borrado)
+        public bool Activo { get; set; } = true;
     }
 }

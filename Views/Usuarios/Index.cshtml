@@ -90,6 +90,7 @@
             </div>
 
             <form action="@Url.Action("GuardarUsuario", "Usuarios")" method="post" autocomplete="off">
+                @Html.AntiForgeryToken()
                 <div class="modal-body p-4 bg-white">
 
                     <div class="mb-3">
@@ -103,7 +104,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">ASIGNAR ROL</label>
+                        <label class="form-label small fw-bold text-secondary">ROL</label>
                         <select name="RolId" class="form-select bg-light border-0 py-2" required>
                             <option value="" selected disabled>Seleccione un rol...</option>
                             @foreach (var rol in ViewBag.Roles)
@@ -139,36 +140,36 @@
             </div>
 
             <form action="@Url.Action("EditarUsuario", "Usuarios")" method="post">
+                @Html.AntiForgeryToken()
                 <input type="hidden" name="Id" id="editUserId">
 
                 <div class="modal-body p-4 bg-white">
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary">Nombre de Usuario</label>
-                        <input type="text" name="UserName" id="editUserName" class="form-control bg-light border-0" required>
+                        <input type="text" name="UserName" id="editUserName" class="form-control bg-light border-0" disabled>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary">Correo Electrónico</label>
-                        <input type="email" name="UserEmail" id="editUserEmail" class="form-control bg-light border-0" required>
+                        <input type="email" name="UserEmail" id="editUserEmail" class="form-control bg-light border-0" disabled>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary text-uppercase">Rol del Usuario</label>
-                        <select name="RolId" id="editRolId" class="form-select bg-light border-0 py-2" required>
-                            @if (ViewBag.Roles != null)
-                            {
-                                foreach (var rol in ViewBag.Roles)
-                                {
-                                    <option value="@rol.Id">@rol.Nombre</option>
-                                }
-                            }
-                        </select>
+                        <label class="form-label small fw-bold text-secondary text-uppercase">Rol</label>
+                        <div class="p-3 bg-light rounded-2 fw-semibold text-dark" id="editRolLabel">
+                            -
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Contraseña</label>
+                        <input type="password" name="Password" class="form-control bg-light border-0" autocomplete="new-password" placeholder="Dejá en blanco si no deseas cambiarla">
                     </div>
 
                     <div class="alert alert-info d-flex align-items-center border-0 rounded-3 bg-info-subtle text-info-emphasis" role="alert">
                         <i class="bi bi-info-circle-fill flex-shrink-0 me-2"></i>
                         <div class="small fw-semibold">
-                            La contraseña no se puede editar desde aquí por seguridad.
+                            Solo puedes editar la contraseña. Los otros datos son de solo lectura.
                         </div>
                     </div>
                 </div>
@@ -191,7 +192,8 @@
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content border-0 shadow">
 
-            <form action="/Home/EliminarUsuario" method="post">
+            <form action="/Usuarios/EliminarUsuario" method="post">
+                @Html.AntiForgeryToken()
                 <input type="hidden" name="Id" id="deleteIdUsuario">
 
                 <div class="modal-body p-4 text-center">
@@ -226,7 +228,7 @@
             document.getElementById('editUserId').value = userId;
             document.getElementById('editUserName').value = userName;
             document.getElementById('editUserEmail').value = userEmail;
-            document.getElementById('editRolId').value = userRolId;
+            document.getElementById('editRolLabel').textContent = userRolId;
         });
     });
 

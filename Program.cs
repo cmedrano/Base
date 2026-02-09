@@ -1,7 +1,8 @@
 using AvicolaApp.Data;
+using AvicolaApp.Services;
+using AvicolaApp.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
@@ -10,15 +11,30 @@ builder.Services.AddControllersWithViews();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString)
+    .EnableSensitiveDataLogging(builder.Environment.IsDevelopment()));
 
+// Registrar Servicios
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IRolService, RolService>();
+builder.Services.AddScoped<IClienteService, ClienteService>();
+builder.Services.AddScoped<IAutenticacionService, AutenticacionService>();
+builder.Services.AddMemoryCache();
+
+// Configurar Autenticación con Cookies
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(option =>
+    .AddCookie(options =>
     {
-        option.LoginPath = "/Acceso/Login";
-        option.AccessDeniedPath = "/Acceso/Denegado";
-        option.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+        options.LoginPath = "/Acceso/Login";
+        options.AccessDeniedPath = "/Acceso/Denegado";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
     });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -30,9 +46,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 

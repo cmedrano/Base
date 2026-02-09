@@ -21,10 +21,10 @@ namespace AvicolaApp.Controllers
 
         public async Task<IActionResult> Index()
         {
-            int totalClientes = await _context.Clientes.CountAsync();
+            int totalClientes = await _context.Clientes.Where(c => c.Activo).CountAsync();
             ViewBag.TotalClientes = totalClientes;
 
-            int totalUsuarios = await _context.Usuarios.CountAsync();
+            int totalUsuarios = await _context.Usuarios.Where(u => u.Activo).CountAsync();
             ViewBag.TotalUsuarios = totalUsuarios;
 
             var roles = await _context.Roles.ToListAsync();
@@ -32,9 +32,9 @@ namespace AvicolaApp.Controllers
 
             return View();
         }
+
         public IActionResult Privacy() => View();
         public IActionResult Clientes() => View();
-
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
