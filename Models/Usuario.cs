@@ -12,6 +12,7 @@ namespace AvicolaApp.Models
         public string UserEmail { get; set; }
 
         [Column("UserPasswordHash")]
+        [StringLength(255)] // BCrypt hash requiere al menos 60 caracteres, pero dejamos 255 para seguridad
         public string Password { get; set; }
 
         public DateTime CreateDate { get; set; }

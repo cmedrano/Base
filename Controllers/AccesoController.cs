@@ -1,8 +1,10 @@
-﻿using AvicolaApp.Models;
+﻿using AvicolaApp.Data;
+using AvicolaApp.Models;
 using AvicolaApp.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace AvicolaApp.Controllers
@@ -10,13 +12,16 @@ namespace AvicolaApp.Controllers
     public class AccesoController : Controller
     {
         private readonly IAutenticacionService _autenticacionService;
+        private readonly ApplicationDbContext _context;
         private readonly ILogger<AccesoController> _logger;
 
         public AccesoController(
             IAutenticacionService autenticacionService,
+            ApplicationDbContext context,
             ILogger<AccesoController> logger)
         {
             _autenticacionService = autenticacionService;
+            _context = context;
             _logger = logger;
         }
 
@@ -82,6 +87,28 @@ namespace AvicolaApp.Controllers
 
         private async Task SignInUsuario(Usuario usuario)
         {
+            // Validar que el usuario y su rol existan
+            if (usuario == null)
+            {
+                throw new InvalidOperationException("Usuario no puede ser nulo");
+            }
+
+            // Si el rol no está cargado, recargar desde la BD
+            if (usuario.Rol == null)
+            {
+                // Recargar el usuario con su rol
+                var usuarioReload = await _context.Usuarios
+                    .Include(u => u.Rol)
+                    .FirstOrDefaultAsync(u => u.Id == usuario.Id);
+
+                if (usuarioReload?.Rol == null)
+                {
+                    throw new InvalidOperationException("No se pudo obtener el rol del usuario");
+                }
+
+                usuario = usuarioReload;
+            }
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),

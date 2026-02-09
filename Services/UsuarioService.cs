@@ -33,10 +33,18 @@ namespace AvicolaApp.Services
 
         public async Task<Usuario?> ObtenerPorNombreOEmailAsync(string nombreOEmail)
         {
-            return await _context.Usuarios
+            var usuario = await _context.Usuarios
                 .Where(u => u.Activo)
                 .Include(u => u.Rol)
                 .FirstOrDefaultAsync(u => u.UserName == nombreOEmail || u.UserEmail == nombreOEmail);
+            
+            // Asegurar que el Rol está completamente cargado
+            if (usuario != null && usuario.Rol == null)
+            {
+                await _context.Entry(usuario).Reference(u => u.Rol).LoadAsync();
+            }
+            
+            return usuario;
         }
 
         public async Task GuardarAsync(Usuario usuario)
@@ -49,8 +57,19 @@ namespace AvicolaApp.Services
 
         public async Task ActualizarAsync(Usuario usuario)
         {
-            _context.Usuarios.Update(usuario);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Usuarios.Update(usuario);
+                await _context.SaveChangesAsync();
+                
+                // Recargar la entidad para incluir las relaciones (Rol)
+                await _context.Entry(usuario).ReloadAsync();
+                await _context.Entry(usuario).Reference(u => u.Rol).LoadAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al actualizar usuario: {ex.Message}", ex);
+            }
         }
 
         public async Task EliminarLogicamenteAsync(int id)

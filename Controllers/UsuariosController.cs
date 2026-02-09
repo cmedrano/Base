@@ -95,39 +95,81 @@ namespace AvicolaApp.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
+        public IActionResult VerificarHash(string password, string hash)
+        {
+            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(hash))
+                return BadRequest("Password y hash son requeridos");
+
+            var esValido = _autenticacionService.VerificarPassword(password, hash);
+            return Ok(new { password = password, hash = hash, esValido = esValido });
+        }
+
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditarUsuario(int Id, string UserName, string UserEmail, int RolId, string Password)
         {
+            _logger.LogInformation($"=== INICIO EditarUsuario === Id: {Id}, UserName: {UserName}, Password recibida: {(string.IsNullOrWhiteSpace(Password) ? "VACIA/NULA" : $"PRESENTE ({Password.Length} caracteres)")}");
+
+            if (Id <= 0)
+            {
+                _logger.LogWarning("EditarUsuario: Id inválido");
+                TempData["Error"] = "ID de usuario inválido";
+                return RedirectToAction("Index");
+            }
+
             var usuarioExistente = await _usuarioService.ObtenerPorIdAsync(Id);
 
             if (usuarioExistente == null)
             {
+                _logger.LogWarning($"EditarUsuario: Usuario con ID {Id} no encontrado");
                 TempData["Error"] = "Usuario no encontrado";
                 return RedirectToAction("Index");
             }
 
             try
             {
-                usuarioExistente.UserName = UserName;
-                usuarioExistente.UserEmail = UserEmail;
-                usuarioExistente.RolId = RolId;
-
-                // Si se proporciona contraseña, hashearla
+                // Solo actualizar la contraseña si se proporcionó una nueva
                 if (!string.IsNullOrWhiteSpace(Password))
                 {
-                    usuarioExistente.Password = _autenticacionService.HashearPassword(Password);
+                    _logger.LogInformation($">>> Generando nuevo hash para usuario {usuarioExistente.UserName} con contraseña de {Password.Length} caracteres");
+                    
+                    var nuevoHash = _autenticacionService.HashearPassword(Password);
+                    _logger.LogInformation($">>> Hash generado: {nuevoHash.Substring(0, Math.Min(20, nuevoHash.Length))}... (longitud: {nuevoHash.Length})");
+                    
+                    // Verificar que el nuevo hash sea válido
+                    if (string.IsNullOrEmpty(nuevoHash) || nuevoHash.Length < 60)
+                    {
+                        throw new Exception($"Hash generado inválido. Longitud: {nuevoHash?.Length ?? 0}");
+                    }
+                    
+                    var hashAnterior = usuarioExistente.Password;
+                    usuarioExistente.Password = nuevoHash;
+                    _logger.LogInformation($">>> Contraseña asignada a la entidad. Hash anterior: {hashAnterior?.Substring(0, 20)}...");
+                    
+                    await _usuarioService.ActualizarAsync(usuarioExistente);
+                    _logger.LogInformation($">>> Contraseña guardada en BD. Nuevo valor: {usuarioExistente.Password?.Substring(0, 20)}...");
+                    
+                    // Verificar que se guardó correctamente
+                    var usuarioVerificado = await _usuarioService.ObtenerPorIdAsync(Id);
+                    var esValida = _autenticacionService.VerificarPassword(Password, usuarioVerificado.Password);
+                    _logger.LogInformation($">>> Verificación post-guardado: Hash en BD = {usuarioVerificado.Password?.Substring(0, 20)}..., ¿Válida? {esValida}");
+                    
+                    TempData["Exito"] = "Contraseña actualizada exitosamente";
+                    _logger.LogInformation($"=== ÉXITO === Contraseña del usuario {usuarioExistente.UserName} actualizada por {User.Identity?.Name}");
                 }
-
-                await _usuarioService.ActualizarAsync(usuarioExistente);
-                TempData["Exito"] = "Usuario actualizado exitosamente";
-                _logger.LogInformation($"Usuario {UserName} actualizado por {User.Identity?.Name}");
+                else
+                {
+                    _logger.LogWarning($"EditarUsuario: Intento de actualizar usuario {Id} sin proporcionar contraseña");
+                    TempData["Aviso"] = "No se ha realizado ningún cambio. Ingresá una nueva contraseña para actualizar.";
+                }
 
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar usuario");
-                TempData["Error"] = "Error al actualizar el usuario";
+                _logger.LogError(ex, "!!! ERROR al actualizar contraseña del usuario ID: {UserId} | Exception: {ExceptionMessage}", Id, ex.Message);
+                TempData["Error"] = $"Error al actualizar la contraseña: {ex.Message}";
                 return RedirectToAction("Index");
             }
         }
@@ -157,6 +199,42 @@ namespace AvicolaApp.Controllers
                 _logger.LogError(ex, "Error al eliminar usuario");
                 TempData["Error"] = "Error al eliminar el usuario";
                 return RedirectToAction("Index");
+            }
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> DiagnosticoPassword(string username, string password)
+        {
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+                return BadRequest("Username y password son requeridos");
+
+            try
+            {
+                var usuario = await _usuarioService.ObtenerPorNombreOEmailAsync(username);
+                
+                if (usuario == null)
+                    return NotFound(new { error = "Usuario no encontrado" });
+
+                var hashAlmacenado = usuario.Password;
+                var esValido = _autenticacionService.VerificarPassword(password, hashAlmacenado);
+                var nuevoHash = _autenticacionService.HashearPassword(password);
+
+                return Ok(new
+                {
+                    usuario = usuario.UserName,
+                    passwordIngresado = password,
+                    hashAlmacenado = hashAlmacenado,
+                    longitudHashAlmacenado = hashAlmacenado?.Length ?? 0,
+                    esValido = esValido,
+                    nuevoHash = nuevoHash,
+                    longitudNuevoHash = nuevoHash.Length,
+                    esHashBCryptValido = hashAlmacenado?.StartsWith("$2") ?? false
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
             }
         }
     }
