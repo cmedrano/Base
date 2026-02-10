@@ -1,4 +1,11 @@
-﻿@model IEnumerable<AvicolaApp.Models.Cliente>
+﻿@model AvicolaApp.Models.DTOs.PaginatedResult<AvicolaApp.Models.Cliente>
+
+@{
+    var categorias = new List<string> { "Mayorista", "Minorista" };
+    var currentPage = (int)ViewData["CurrentPage"];
+    var searchNombre = (string)ViewData["SearchNombre"];
+    var searchFantasia = (string)ViewData["SearchFantasia"];
+}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex align-items-center gap-3">
@@ -13,46 +20,19 @@
     <button type="button" class="btn btn-purple rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente" style="background-color: #6f42c1; color: white;">
         + Crear Nuevo Cliente
     </button>
-    @*   <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Usuario</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div> *@
 </div>
 
 <div class="card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-body p-4">
-        <form class="row g-3 align-items-end">
-            <div class="col-md-5">
-                <label class="form-label small fw-bold mb-1" style="color: #6f42c1;">BUSCAR</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-0 rounded-start-3 ps-3"><i class="bi bi-search text-secondary"></i></span>
-                    <input type="text" class="form-control bg-light border-0 rounded-end-3 py-2">
-                </div>
+        <form class="row g-3 align-items-end" id="filtrosForm" method="get" action="@Url.Action("Index", "Clientes")">
+            <div class="col-md-6">
+                <label class="form-label small fw-bold mb-1" style="color: #6f42c1;">NOMBRE</label>
+                <input type="text" id="inputNombre" name="searchNombre" class="form-control bg-light border-0 rounded-3 py-2"value="@searchNombre">
             </div>
 
-            <div class="col-md-3">
-                <label class="form-label small fw-bold mb-1" style="color: #6f42c1;">ZONA</label>
-                <select class="form-select bg-light border-0 rounded-3 py-2">
-                    <option selected>Todas las zonas</option>
-                    <option value="1">Longchamps</option>
-                    <option value="2">Burzaco</option>
-                    <option value="3">Glew</option>
-                </select>
-            </div>
-
-            <div class="col-md-2">
-                <label class="form-label small fw-bold mb-1" style="color: #6f42c1;">ESTADO</label>
-                <select class="form-select bg-light border-0 rounded-3 py-2">
-                    <option selected>Todos</option>
-                    <option value="1">Al día</option>
-                    <option value="2">Deudores</option>
-                </select>
-            </div>
-
-            <div class="col-md-2 text-end">
-                <button type="reset" class="btn btn-light fw-bold w-100 py-2 rounded-3 hover-scale" style="color: #6f42c1;">
-                    <i class="bi bi-arrow-counterclockwise me-2"></i>Limpiar
-                </button>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold mb-1" style="color: #6f42c1;">NOMBRE FANTASÍA</label>
+                <input type="text" id="inputNombreFantasia" name="searchFantasia" class="form-control bg-light border-0 rounded-3 py-2"value="@searchFantasia">
             </div>
         </form>
     </div>
@@ -64,76 +44,96 @@
             <table class="table table-hover align-middle mb-0" style="min-width: 800px;">
                 <thead style="background-color: #6f42c1; color: white;">
                     <tr>
-                        <th class="ps-4 py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Cliente</th>
-                        <th class="py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Contacto</th>
+                        <th class="ps-4 py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Nombre</th>
+                        <th class="py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Teléfono</th>
                         <th class="py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Email</th>
-                        <th class="py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Saldo Cta. Cte.</th>
+                        <th class="py-3 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Categoría</th>
                         <th class="pe-4 py-3 text-end small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach (var item in Model)
+                <tbody id="tablaClientesBody">
+                    @if (Model.Items.Count > 0)
+                    {
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr class="fila-cliente">
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle text-white d-flex justify-content-center align-items-center me-3 fw-bold shadow-sm" style="width: 40px; height: 40px; background-color: #6f42c1;">
+                                            @item.Nombre.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@item.Nombre</div>
+                                            <div class="small text-secondary"><i class="bi bi-shop me-1"></i>@(item.Fantasia ?? "Sin fantasía")</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3">
+                                    <span class="small">@(item.Telefono ?? "-")</span>
+                                </td>
+                                <td class="py-3">
+                                    <span class="small">@(item.Email ?? "-")</span>
+                                </td>
+                                <td class="py-3">
+                                    @if (!string.IsNullOrEmpty(item.Categoria))
+                                    {
+                                        <span class="badge rounded-pill px-3" style="background-color: #6f42c1; color: white;">@item.Categoria</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary small">-</span>
+                                    }
+                                </td>
+                                <td class="pe-4 py-3 text-end">
+                                    <button class="btn btn-light btn-sm rounded-circle shadow-sm"
+                                            title="Ver detalles"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalVerCliente"
+                                            data-cliente-id="@item.Id"
+                                            data-cliente-nombre="@item.Nombre"
+                                            data-cliente-telefono="@item.Telefono"
+                                            data-cliente-domicilio="@item.Domicilio"
+                                            data-cliente-email="@item.Email"
+                                            data-cliente-celular="@item.Celular"
+                                            data-cliente-fax="@item.Fax"
+                                            data-cliente-fantasia="@item.Fantasia"
+                                            data-cliente-categoria="@item.Categoria"
+                                            data-cliente-operaciones-contado="@item.OperacionesContado"
+                                            data-cliente-inhabilitado="@item.InhabilitadoFacturar">
+                                        <i class="bi bi-eye-fill" style="color: #6f42c1;"></i>
+                                    </button>
+
+                                    <button class="btn btn-light btn-sm rounded-circle shadow-sm"
+                                            title="Editar Cliente"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalEditarCliente"
+                                            data-cliente-id="@item.Id"
+                                            data-cliente-nombre="@item.Nombre"
+                                            data-cliente-telefono="@item.Telefono"
+                                            data-cliente-domicilio="@item.Domicilio"
+                                            data-cliente-email="@item.Email"
+                                            data-cliente-celular="@item.Celular"
+                                            data-cliente-fax="@item.Fax"
+                                            data-cliente-fantasia="@item.Fantasia"
+                                            data-cliente-categoria="@item.Categoria"
+                                            data-cliente-operaciones-contado="@item.OperacionesContado"
+                                            data-cliente-inhabilitado="@item.InhabilitadoFacturar">
+                                        <i class="bi bi-pencil-fill" style="color: #6f42c1;"></i>
+                                    </button>
+
+                                    <button type="button" class="btn btn-light btn-sm rounded-circle shadow-sm" title="Eliminar Cliente" data-bs-toggle="modal" data-bs-target="#modalConfirmarEliminar" data-cliente-id="@item.Id" data-cliente-nombre="@item.Nombre">
+                                        <i class="bi bi-trash3-fill text-danger"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
                     {
                         <tr>
-                            <td class="ps-4 py-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="rounded-circle text-white d-flex justify-content-center align-items-center me-3 fw-bold shadow-sm" style="width: 40px; height: 40px; background-color: #6f42c1;">
-                                        @item.NombreRazonSocial.Substring(0, 1).ToUpper()
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-dark">@item.NombreRazonSocial</div>
-                                        <div class="small text-secondary"><i class="bi bi-card-heading me-1"></i>@item.Cuit</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-3">
-                                <div class="d-flex flex-column">
-                                    <span class="fw-bold text-dark">@(item.Localidad ?? "-")</span>
-                                    <span class="small text-success"><i class="bi bi-whatsapp me-1"></i>@(item.Celular ?? item.Telefono ?? "-")</span>
-                                </div>
-                            </td>
-                            <td class="py-3">
-                                <span class="small">@(item.Email ?? "-")</span>
-                            </td>
-                            <td class="py-3">
-                                @if (item.SaldoCuentaCorriente < 0)
-                                {
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">
-                                        $ @item.SaldoCuentaCorriente.ToString("N2") <i class="bi bi-exclamation-circle-fill ms-1"></i>
-                                    </span>
-                                }
-                                else if (item.SaldoCuentaCorriente > 0)
-                                {
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
-                                        $ +@item.SaldoCuentaCorriente.ToString("N2")
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="text-secondary fw-bold small">- $ 0,00 -</span>
-                                }
-                            </td>
-                            <td class="pe-4 py-3 text-end">
-                                <button class="btn btn-light btn-sm rounded-circle shadow-sm"
-                                        title="Editar Cliente"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalEditarCliente"
-                                        data-cliente-id="@item.Id"
-                                        data-cliente-nombre="@item.NombreRazonSocial"
-                                        data-cliente-cuit="@item.Cuit"
-                                        data-cliente-domicilio="@item.Domicilio"
-                                        data-cliente-email="@item.Email"
-                                        data-cliente-telefono="@item.Telefono"
-                                        data-cliente-celular="@item.Celular"
-                                        data-cliente-fax="@item.Fax"
-                                        data-cliente-localidad="@item.Localidad"
-                                        data-cliente-tipo="@item.TipoCliente">
-                                    <i class="bi bi-pencil-fill" style="color: #6f42c1;"></i>
-                                </button>
-
-                                <button type="button" class="btn btn-light btn-sm rounded-circle shadow-sm" title="Eliminar Cliente" data-bs-toggle="modal" data-bs-target="#modalConfirmarEliminar" data-cliente-id="@item.Id" data-cliente-nombre="@item.NombreRazonSocial">
-                                    <i class="bi bi-trash3-fill text-danger"></i>
-                                </button>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-3 mb-2"></i>
+                                <p>No hay clientes que coincidan con tu búsqueda.</p>
                             </td>
                         </tr>
                     }
@@ -143,60 +143,130 @@
     </div>
 </div>
 
-<!-- Modal Nuevo Cliente -->
-<div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-hidden="true">
+<!-- Controles de Paginación -->
+@if (Model.TotalPages > 1)
+{
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-secondary small">
+            Mostrando <strong>@((currentPage - 1) * Model.PageSize + 1)</strong> a <strong>@Math.Min(currentPage * Model.PageSize, Model.TotalCount)</strong> de <strong>@Model.TotalCount</strong> clientes
+        </div>
+        <nav>
+            <ul class="pagination mb-0">
+                @if (Model.HasPreviousPage)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("Index", "Clientes", new { page = currentPage - 1, searchNombre, searchFantasia })" style="color: #6f42c1;">
+                            <i class="bi bi-chevron-left"></i> Anterior
+                        </a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Anterior</span>
+                    </li>
+                }
+
+                @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(Model.TotalPages, currentPage + 2); i++)
+                {
+                    if (i == currentPage)
+                    {
+                        <li class="page-item active">
+                            <span class="page-link" style="background-color: #6f42c1; border-color: #6f42c1;">@i</span>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Index", "Clientes", new { page = i, searchNombre, searchFantasia })" style="color: #6f42c1;">@i</a>
+                        </li>
+                    }
+                }
+
+                @if (Model.HasNextPage)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("Index", "Clientes", new { page = currentPage + 1, searchNombre, searchFantasia })" style="color: #6f42c1;">
+                            Siguiente <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">Siguiente <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                }
+            </ul>
+        </nav>
+    </div>
+}
+
+<partial name="_ModalNuevoCliente" />
+
+<!-- Modal Ver Cliente -->
+<div class="modal fade" id="modalVerCliente" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-4">
-           
-            <div class="modal-header text-white" style="background-color: #6f42c1; color: white;">
-                <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Cliente</h5>
+            <div class="modal-header border-0 pb-0 ps-4 pt-4 rounded-top-4" style="background-color: #6f42c1; color: white;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-eye me-2"></i>Cliente <span id="verClienteNombreTitle"></span></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-
-            <form action="@Url.Action("GuardarCliente", "Clientes")" method="post">
-                <div class="modal-body p-4 bg-white">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">NOMBRE / RAZÓN SOCIAL</label>
-                        <input type="text" name="NombreRazonSocial" class="form-control bg-light border-0 rounded-3 py-2" required>
+            <div class="modal-body p-4 bg-white">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">NOMBRE</label>
+                    <input type="text" id="verClienteNombre" class="form-control bg-light border-0 rounded-3 py-2 readonly-input" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">NOMBRE FANTASÍA</label>
+                    <input type="text" id="verClienteFantasia" class="form-control bg-light border-0 rounded-3 py-2 readonly-input" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">CATEGORÍA</label>
+                    <input type="text" id="verClienteCategoria" class="form-control bg-light border-0 rounded-3 py-2 readonly-input" readonly>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-secondary">TELÉFONO</label>
+                        <input type="text" id="verClienteTelefono" class="form-control bg-light border-0 rounded-3 py-2 readonly-input" readonly>
                     </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small fw-bold text-secondary">CUIT</label>
-                            <input type="text" name="Cuit" class="form-control bg-light border-0 rounded-3 py-2" required>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-bold text-secondary">EMAIL</label>
-                            <input type="email" name="Email" class="form-control bg-light border-0 rounded-3 py-2">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">DOMICILIO</label>
-                        <input type="text" name="Domicilio" class="form-control bg-light border-0 rounded-3 py-2">
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-4">
-                            <label class="form-label small fw-bold text-secondary">TELÉFONO</label>
-                            <input type="text" name="Telefono" class="form-control bg-light border-0 rounded-3 py-2">
-                        </div>
-                        <div class="col-4">
-                            <label class="form-label small fw-bold text-secondary">CELULAR</label>
-                            <input type="text" name="Celular" class="form-control bg-light border-0 rounded-3 py-2">
-                        </div>
-                        <div class="col-4">
-                            <label class="form-label small fw-bold text-secondary">FAX</label>
-                            <input type="text" name="Fax" class="form-control bg-light border-0 rounded-3 py-2">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">LOCALIDAD</label>
-                        <input type="text" name="Localidad" class="form-control bg-light border-0 rounded-3 py-2">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-secondary">CELULAR</label>
+                        <input type="text" id="verClienteCelular" class="form-control bg-light border-0 rounded-3 py-2 readonly-input" readonly>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pe-4 pb-4 bg-white rounded-bottom-4 d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-light text-secondary rounded-pill px-4 fw-bold hover-danger shadow-sm border-0" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn rounded-pill px-4 fw-bold shadow hover-scale" style="background-color: #6f42c1; color: white;">Guardar</button>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">EMAIL</label>
+                    <input type="email" id="verClienteEmail" class="form-control bg-light border-0 rounded-3 py-2 readonly-input" readonly>
                 </div>
-            </form>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">DOMICILIO</label>
+                    <input type="text" id="verClienteDomicilio" class="form-control bg-light border-0 rounded-3 py-2 readonly-input" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">FAX</label>
+                    <input type="text" id="verClienteFax" class="form-control bg-light border-0 rounded-3 py-2 readonly-input" readonly>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="verOperacionesContado" disabled>
+                        <label class="form-check-label" for="verOperacionesContado">
+                            Operaciones al contado
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="verInhabilitado" disabled>
+                        <label class="form-check-label" for="verInhabilitado">
+                            Inhabilitado para facturar
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pe-4 pb-4 bg-white rounded-bottom-4 d-flex justify-content-end gap-2">
+                <button type="button" class="btn rounded-pill px-4 fw-bold shadow" style="background-color: #6f42c1; color: white;" data-bs-dismiss="modal">Cerrar</button>
+            </div>
         </div>
     </div>
 </div>
@@ -209,44 +279,65 @@
                 <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Editar Cliente</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action="@Url.Action("EditarCliente", "Clientes")" method="post">
+            <form action="@Url.Action("EditarCliente", "Clientes")" method="post" id="formEditarCliente">
                 <input type="hidden" name="Id" id="editClienteId">
                 <div class="modal-body p-4 bg-white">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">NOMBRE / RAZÓN SOCIAL</label>
-                        <input type="text" name="NombreRazonSocial" id="editClienteNombre" class="form-control bg-light border-0 rounded-3 py-2" required>
+                        <label class="form-label small fw-bold text-secondary">NOMBRE</label>
+                        <input type="text" name="Nombre" id="editClienteNombre" class="form-control bg-light border-0 rounded-3 py-2" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">NOMBRE FANTASÍA</label>
+                        <input type="text" name="Fantasia" id="editClienteFantasia" class="form-control bg-light border-0 rounded-3 py-2">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">CATEGORÍA</label>
+                        <select name="Categoria" id="editClienteCategoria" class="form-select bg-light border-0 rounded-3 py-2">
+                            <option value="">Seleccione una categoría...</option>
+                            @foreach (var categoria in categorias)
+                            {
+                                <option value="@categoria">@categoria</option>
+                            }
+                        </select>
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-secondary">CUIT / DNI</label>
-                            <input type="text" name="Cuit" id="editClienteCuit" class="form-control bg-light border-0 rounded-3 py-2" required>
+                            <label class="form-label small fw-bold text-secondary">TELÉFONO</label>
+                            <input type="text" name="Telefono" id="editClienteTelefono" class="form-control bg-light border-0 rounded-3 py-2">
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-secondary">EMAIL</label>
-                            <input type="email" name="Email" id="editClienteEmail" class="form-control bg-light border-0 rounded-3 py-2">
+                            <label class="form-label small fw-bold text-secondary">CELULAR</label>
+                            <input type="text" name="Celular" id="editClienteCelular" class="form-control bg-light border-0 rounded-3 py-2">
                         </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">EMAIL</label>
+                        <input type="email" name="Email" id="editClienteEmail" class="form-control bg-light border-0 rounded-3 py-2">
+                        <div id="errorEmailEditar" class="text-danger small mt-1" style="display: none;"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary">DOMICILIO</label>
                         <input type="text" name="Domicilio" id="editClienteDomicilio" class="form-control bg-light border-0 rounded-3 py-2">
                     </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-4">
-                            <label class="form-label small fw-bold text-secondary">TELÉFONO</label>
-                            <input type="text" name="Telefono" id="editClienteTelefono" class="form-control bg-light border-0 rounded-3 py-2">
-                        </div>
-                        <div class="col-4">
-                            <label class="form-label small fw-bold text-secondary">CELULAR</label>
-                            <input type="text" name="Celular" id="editClienteCelular" class="form-control bg-light border-0 rounded-3 py-2">
-                        </div>
-                        <div class="col-4">
-                            <label class="form-label small fw-bold text-secondary">FAX</label>
-                            <input type="text" name="Fax" id="editClienteFax" class="form-control bg-light border-0 rounded-3 py-2">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">FAX</label>
+                        <input type="text" name="Fax" id="editClienteFax" class="form-control bg-light border-0 rounded-3 py-2">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="OperacionesContado" id="editOperacionesContado" value="true">
+                            <label class="form-check-label" for="editOperacionesContado">
+                                Operaciones al contado
+                            </label>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">LOCALIDAD</label>
-                        <input type="text" name="Localidad" id="editClienteLocalidad" class="form-control bg-light border-0 rounded-3 py-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="InhabilitadoFacturar" id="editInhabilitado" value="true">
+                            <label class="form-check-label" for="editInhabilitado">
+                                Inhabilitado para facturar
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pe-4 pb-4 bg-white rounded-bottom-4 d-flex justify-content-end gap-2">
@@ -279,67 +370,7 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var modalEditarCliente = document.getElementById('modalEditarCliente');
-
-        modalEditarCliente.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget;
-
-            var clienteId = button.getAttribute('data-cliente-id');
-            var clienteNombre = button.getAttribute('data-cliente-nombre');
-            var clienteCuit = button.getAttribute('data-cliente-cuit');
-            var clienteDomicilio = button.getAttribute('data-cliente-domicilio');
-            var clienteEmail = button.getAttribute('data-cliente-email');
-            var clienteTelefono = button.getAttribute('data-cliente-telefono');
-            var clienteCelular = button.getAttribute('data-cliente-celular');
-            var clienteFax = button.getAttribute('data-cliente-fax');
-            var clienteLocalidad = button.getAttribute('data-cliente-localidad');
-            var clienteTipo = button.getAttribute('data-cliente-tipo');
-
-            document.getElementById('editClienteId').value = clienteId;
-            document.getElementById('editClienteNombre').value = clienteNombre;
-            document.getElementById('editClienteCuit').value = clienteCuit;
-            document.getElementById('editClienteDomicilio').value = clienteDomicilio || '';
-            document.getElementById('editClienteEmail').value = clienteEmail || '';
-            document.getElementById('editClienteTelefono').value = clienteTelefono || '';
-            document.getElementById('editClienteCelular').value = clienteCelular || '';
-            document.getElementById('editClienteFax').value = clienteFax || '';
-            document.getElementById('editClienteLocalidad').value = clienteLocalidad || '';
-
-            if (clienteTipo === 'Mayorista') {
-                document.getElementById('editTipo1').checked = true;
-            } else {
-                document.getElementById('editTipo2').checked = true;
-            }
-        });
-
-        var modalConfirmarEliminar = document.getElementById('modalConfirmarEliminar');
-        var clienteIdToDelete = null;
-
-        modalConfirmarEliminar.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget;
-            clienteIdToDelete = button.getAttribute('data-cliente-id');
-        });
-
-        document.getElementById('btnConfirmarEliminar').addEventListener('click', function() {
-            if (clienteIdToDelete) {
-                var form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '@Url.Action("EliminarCliente", "Clientes")';
-
-                var input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'id';
-                input.value = clienteIdToDelete;
-
-                form.appendChild(input);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    });
-</script>
+<script src="~/js/clientes-index.js"></script>
 
 <style>
     .btn-check:checked + label {
@@ -349,5 +380,10 @@
 
     .hover-scale:hover {
         transform: scale(1.05);
+    }
+
+    .readonly-input {
+        pointer-events: none;
+        cursor: default !important;
     }
 </style>

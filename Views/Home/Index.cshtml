@@ -38,7 +38,6 @@
         </div>
     }
 
-    @* Cartera de Clientes - visible para todos *@
     <div class="col">
         <div class="card h-100 border-0 shadow-sm border-start border-4" style="border-color: #6610f2 !important;">
             <div class="card-body d-flex flex-column">
@@ -66,117 +65,8 @@
 
 </div>
 
-@* Modal Nuevo Usuario - Solo para Administradores *@
-@if (User.IsInRole("Administrador"))
-{
-    <div class="modal fade" id="modalNuevoUsuario" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fw-bold"> <i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Usuario</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-
-                <form action="/Usuarios/GuardarUsuario" method="post" autocomplete="off">
-                    <div class="modal-body p-4 bg-white">
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary">USUARIO</label>
-                            <input type="text" name="UserName" class="form-control bg-light border-0" required autocomplete="none">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary">CORREO ELECTRÓNICO</label>
-                            <input type="email" name="UserEmail" class="form-control bg-light border-0" required autocomplete="none">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary">ROL</label>
-                            <select name="RolId" class="form-select bg-light border-0 py-2" required>
-                                <option value="" selected disabled>Seleccione un rol...</option>
-                                @foreach (var rol in ViewBag.Roles)
-                                {
-                                    <option value="@rol.Id">@rol.Nombre</option>
-                                }
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary">CONTRASEÑA</label>
-                            <input type="password" name="Password" class="form-control bg-light border-0" required autocomplete="new-password">
-                        </div>
-
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary fw-bold">Guardar Usuario</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-}
-
-@* Modal Nuevo Cliente - Visible para todos *@
-<div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            @* <div class="modal-header border-0 pb-0 ps-4 pt-4 rounded-top-4" style="background-color: #6f42c1; color: white;">
-                <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Nuevo Cliente</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div> *@
-            <div class="modal-header text-white" style="background-color: #6f42c1; color: white;">
-                <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Cliente</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-
-            <form action="@Url.Action("GuardarCliente", "Clientes")" method="post">
-                <div class="modal-body p-4 bg-white">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">NOMBRE / RAZÓN SOCIAL</label>
-                        <input type="text" name="NombreRazonSocial" class="form-control bg-light border-0 rounded-3 py-2" required>
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small fw-bold text-secondary">CUIT</label>
-                            <input type="text" name="Cuit" class="form-control bg-light border-0 rounded-3 py-2" required>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-bold text-secondary">EMAIL</label>
-                            <input type="email" name="Email" class="form-control bg-light border-0 rounded-3 py-2">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">DOMICILIO</label>
-                        <input type="text" name="Domicilio" class="form-control bg-light border-0 rounded-3 py-2">
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-4">
-                            <label class="form-label small fw-bold text-secondary">TELÉFONO</label>
-                            <input type="text" name="Telefono" class="form-control bg-light border-0 rounded-3 py-2">
-                        </div>
-                        <div class="col-4">
-                            <label class="form-label small fw-bold text-secondary">CELULAR</label>
-                            <input type="text" name="Celular" class="form-control bg-light border-0 rounded-3 py-2">
-                        </div>
-                        <div class="col-4">
-                            <label class="form-label small fw-bold text-secondary">FAX</label>
-                            <input type="text" name="Fax" class="form-control bg-light border-0 rounded-3 py-2">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">LOCALIDAD</label>
-                        <input type="text" name="Localidad" class="form-control bg-light border-0 rounded-3 py-2">
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pe-4 pb-4 bg-white rounded-bottom-4 d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-light text-secondary rounded-pill px-4 fw-bold hover-danger shadow-sm border-0" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn rounded-pill px-4 fw-bold shadow hover-scale" style="background-color: #6f42c1; color: white;">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<partial name="_ModalNuevoUsuario" />
+<partial name="_ModalNuevoCliente" />
 
 <style>
     .hover-danger:hover {

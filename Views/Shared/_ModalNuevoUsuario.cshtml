@@ -1,0 +1,49 @@
+﻿@if (User.IsInRole("Administrador"))
+{
+    <div class="modal fade" id="modalNuevoUsuario" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"> <i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form action="/Usuarios/GuardarUsuario" method="post" autocomplete="off">
+                    <div class="modal-body p-4 bg-white">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">USUARIO</label>
+                            <input type="text" name="UserName" class="form-control bg-light border-0" required autocomplete="none">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">CORREO ELECTRÓNICO</label>
+                            <input type="email" name="UserEmail" class="form-control bg-light border-0" required autocomplete="none">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">ROL</label>
+                            <select name="RolId" class="form-select bg-light border-0 py-2" required>
+                                <option value="" selected disabled>Seleccione un rol...</option>
+                                @foreach (var rol in ViewBag.Roles)
+                                {
+                                    <option value="@rol.Id">@rol.Nombre</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">CONTRASEÑA</label>
+                            <input type="password" name="Password" class="form-control bg-light border-0" required autocomplete="new-password">
+                        </div>
+
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Guardar Usuario</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

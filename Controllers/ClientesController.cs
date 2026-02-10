@@ -1,4 +1,5 @@
 ﻿using AvicolaApp.Models;
+using AvicolaApp.Models.DTOs;
 using AvicolaApp.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,49 +10,92 @@ namespace AvicolaApp.Controllers
     public class ClientesController : Controller
     {
         private readonly IClienteService _clienteService;
+        private const int PageSize = 10;
 
         public ClientesController(IClienteService clienteService)
         {
             _clienteService = clienteService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1, string? searchNombre = null, string? searchFantasia = null)
         {
-            var listaClientes = await _clienteService.ObtenerTodosAsync();
-            return View(listaClientes);
+            if (page < 1)
+                page = 1;
+
+            var resultado = await _clienteService.ObtenerPaginadosAsync(page, PageSize, searchNombre, searchFantasia);
+
+            ViewData["CurrentPage"] = page;
+            ViewData["PageSize"] = PageSize;
+            ViewData["SearchNombre"] = searchNombre ?? "";
+            ViewData["SearchFantasia"] = searchFantasia ?? "";
+
+            return View(resultado);
         }
 
-        [HttpPost]
+        //public async Task<IActionResult> Index(int page = 1, string? searchNombre = null, string? searchFantasia = null)
+        //{
+        //    if (page < 1)
+        //        page = 1;
+
+        //    var resultado = await _clienteService.ObtenerPaginadosAsync(page, PageSize, searchNombre, searchFantasia);
+
+        //    ViewData["CurrentPage"] = page;
+        //    ViewData["PageSize"] = PageSize;
+        //    ViewData["SearchNombre"] = searchNombre ?? "";
+        //    ViewData["SearchFantasia"] = searchFantasia ?? "";
+
+        //    // ✅ NUEVO: Detectar si es petición AJAX
+        //    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        //    {
+        //        return PartialView("_TablaClientesPartial", resultado);
+        //    }
+
+        //    return View(resultado);
+        //}
+
+        [HttpPost(Name = "GuardarCliente")]
         public async Task<IActionResult> GuardarCliente(
-            string NombreRazonSocial,
-            string Cuit,
+            string Nombre,
+            string? Telefono,
             string? Domicilio,
             string? Email,
-            string? Telefono,
             string? Celular,
             string? Fax,
-            string? Localidad,
-            string TipoCliente)
+            string? Fantasia,
+            string? Categoria,
+            bool OperacionesContado,
+            bool InhabilitadoFacturar)
         {
-            // Validar que el CUIT no exista
-            var clienteExistente = await _clienteService.ObtenerPorCuitAsync(Cuit);
-            if (clienteExistente != null)
+            // Validar que el Nombre no esté vacío
+            if (string.IsNullOrWhiteSpace(Nombre))
             {
-                TempData["Error"] = "El CUIT ya existe en el sistema";
+                TempData["Error"] = "El nombre es obligatorio";
                 return RedirectToAction("Index");
+            }
+
+            // Validar email duplicado si se proporciona
+            if (!string.IsNullOrWhiteSpace(Email))
+            {
+                var clienteExistente = await _clienteService.ObtenerPorEmailAsync(Email);
+                if (clienteExistente != null)
+                {
+                    TempData["Error"] = "El email ya está registrado en otro cliente activo";
+                    return RedirectToAction("Index");
+                }
             }
 
             var nuevoCliente = new Cliente
             {
-                NombreRazonSocial = NombreRazonSocial,
-                Cuit = Cuit,
+                Nombre = Nombre,
+                Telefono = Telefono,
                 Domicilio = Domicilio,
                 Email = Email,
-                Telefono = Telefono,
                 Celular = Celular,
                 Fax = Fax,
-                Localidad = Localidad,
-                TipoCliente = TipoCliente
+                Fantasia = Fantasia,
+                Categoria = Categoria,
+                OperacionesContado = OperacionesContado,
+                InhabilitadoFacturar = InhabilitadoFacturar
             };
 
             await _clienteService.GuardarAsync(nuevoCliente);
@@ -60,18 +104,19 @@ namespace AvicolaApp.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpPost]
+        [HttpPost(Name = "EditarCliente")]
         public async Task<IActionResult> EditarCliente(
             int Id,
-            string NombreRazonSocial,
-            string Cuit,
+            string Nombre,
+            string? Telefono,
             string? Domicilio,
             string? Email,
-            string? Telefono,
             string? Celular,
             string? Fax,
-            string? Localidad,
-            string TipoCliente)
+            string? Fantasia,
+            string? Categoria,
+            bool OperacionesContado,
+            bool InhabilitadoFacturar)
         {
             var clienteExistente = await _clienteService.ObtenerPorIdAsync(Id);
 
@@ -81,26 +126,27 @@ namespace AvicolaApp.Controllers
                 return RedirectToAction("Index");
             }
 
-            // Validar que el CUIT no esté en uso por otro cliente
-            if (clienteExistente.Cuit != Cuit)
+            // Validar email duplicado si el email cambió y no está vacío
+            if (!string.IsNullOrWhiteSpace(Email) && Email != clienteExistente.Email)
             {
-                var otroCuitEnUso = await _clienteService.ObtenerPorCuitAsync(Cuit);
-                if (otroCuitEnUso != null)
+                var clienteConEmailDuplicado = await _clienteService.ObtenerPorEmailAsync(Email);
+                if (clienteConEmailDuplicado != null)
                 {
-                    TempData["Error"] = "El CUIT ya está en uso por otro cliente";
+                    TempData["Error"] = "El email ya está registrado en otro cliente activo";
                     return RedirectToAction("Index");
                 }
             }
 
-            clienteExistente.NombreRazonSocial = NombreRazonSocial;
-            clienteExistente.Cuit = Cuit;
+            clienteExistente.Nombre = Nombre;
+            clienteExistente.Telefono = Telefono;
             clienteExistente.Domicilio = Domicilio;
             clienteExistente.Email = Email;
-            clienteExistente.Telefono = Telefono;
             clienteExistente.Celular = Celular;
             clienteExistente.Fax = Fax;
-            clienteExistente.Localidad = Localidad;
-            clienteExistente.TipoCliente = TipoCliente;
+            clienteExistente.Fantasia = Fantasia;
+            clienteExistente.Categoria = Categoria;
+            clienteExistente.OperacionesContado = OperacionesContado;
+            clienteExistente.InhabilitadoFacturar = InhabilitadoFacturar;
 
             await _clienteService.ActualizarAsync(clienteExistente);
             TempData["Exito"] = "Cliente actualizado exitosamente";
@@ -108,7 +154,7 @@ namespace AvicolaApp.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpPost]
+        [HttpPost(Name = "EliminarCliente")]
         public async Task<IActionResult> EliminarCliente(int id)
         {
             var cliente = await _clienteService.ObtenerPorIdAsync(id);
@@ -123,6 +169,37 @@ namespace AvicolaApp.Controllers
             TempData["Exito"] = "Cliente eliminado exitosamente";
 
             return RedirectToAction("Index");
+        }
+
+        [HttpGet(Name = "ValidarEmail")]
+        public async Task<IActionResult> ValidarEmail(string email, int? clienteId = null)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return Json(new { valido = true });
+            }
+
+            var clienteExistente = await _clienteService.ObtenerPorEmailAsync(email);
+            
+            // Si es para editar, verificar que el email no pertenezca a otro cliente
+            if (clienteId.HasValue)
+            {
+                var clienteActual = await _clienteService.ObtenerPorIdAsync(clienteId.Value);
+                if (clienteExistente != null && clienteExistente.Id != clienteId.Value)
+                {
+                    return Json(new { valido = false, mensaje = "Este email ya está registrado en otro cliente activo" });
+                }
+            }
+            else
+            {
+                // Si es para crear, verificar que no exista
+                if (clienteExistente != null)
+                {
+                    return Json(new { valido = false, mensaje = "Este email ya está registrado en otro cliente activo" });
+                }
+            }
+
+            return Json(new { valido = true });
         }
     }
 }

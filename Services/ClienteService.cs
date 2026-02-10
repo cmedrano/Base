@@ -1,5 +1,6 @@
 ﻿using AvicolaApp.Data;
 using AvicolaApp.Models;
+using AvicolaApp.Models.DTOs;
 using AvicolaApp.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -34,13 +35,57 @@ namespace AvicolaApp.Services
         {
             return await _context.Clientes
                 .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Cuit == cuit && c.Activo);
+                .FirstOrDefaultAsync(c => c.Nombre == cuit);
+        }
+
+        public async Task<Cliente?> ObtenerPorEmailAsync(string email)
+        {
+            return await _context.Clientes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Activo && c.Email == email);
+        }
+
+        public async Task<PaginatedResult<Cliente>> ObtenerPaginadosAsync(int pageNumber, int pageSize, string? searchNombre = null, string? searchFantasia = null)
+        {
+            var query = _context.Clientes
+                .Where(c => c.Activo)
+                .AsNoTracking();
+
+            // Aplicar filtros de búsqueda
+            if (!string.IsNullOrWhiteSpace(searchNombre))
+            {
+                var lowerSearchNombre = searchNombre.ToLower().Trim();
+                query = query.Where(c => c.Nombre.ToLower().StartsWith(lowerSearchNombre));
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchFantasia))
+            {
+                var lowerSearchFantasia = searchFantasia.ToLower().Trim();
+                query = query.Where(c => c.Fantasia != null && c.Fantasia.ToLower().StartsWith(lowerSearchFantasia));
+            }
+
+            // Contar total de registros
+            var totalCount = await query.CountAsync();
+
+            // Aplicar paginación
+            var items = await query
+                .OrderByDescending(c => c.FechaRegistro)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginatedResult<Cliente>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
 
         public async Task GuardarAsync(Cliente cliente)
         {
             cliente.FechaRegistro = DateTime.UtcNow;
-            cliente.SaldoCuentaCorriente = 0;
             cliente.Activo = true;
 
             _context.Clientes.Add(cliente);
@@ -53,15 +98,16 @@ namespace AvicolaApp.Services
 
             if (clienteExistente != null)
             {
-                clienteExistente.NombreRazonSocial = cliente.NombreRazonSocial;
-                clienteExistente.Cuit = cliente.Cuit;
+                clienteExistente.Nombre = cliente.Nombre;
+                clienteExistente.Telefono = cliente.Telefono;
                 clienteExistente.Domicilio = cliente.Domicilio;
                 clienteExistente.Email = cliente.Email;
-                clienteExistente.Telefono = cliente.Telefono;
                 clienteExistente.Celular = cliente.Celular;
                 clienteExistente.Fax = cliente.Fax;
-                clienteExistente.Localidad = cliente.Localidad;
-                clienteExistente.TipoCliente = cliente.TipoCliente;
+                clienteExistente.Fantasia = cliente.Fantasia;
+                clienteExistente.Categoria = cliente.Categoria;
+                clienteExistente.OperacionesContado = cliente.OperacionesContado;
+                clienteExistente.InhabilitadoFacturar = cliente.InhabilitadoFacturar;
 
                 _context.Clientes.Update(clienteExistente);
                 await _context.SaveChangesAsync();
